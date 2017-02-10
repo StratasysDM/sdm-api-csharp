@@ -54,6 +54,7 @@
     <Compile Include="Models\Finish.cs" />
     <Compile Include="Models\GetMaterialsResponse.cs" />
     <Compile Include="Models\Material.cs" />
+    <Compile Include="Models\MaterialColor.cs" />
     <Compile Include="Models\PartStyle.cs" />
     <Compile Include="StratasysDirectClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

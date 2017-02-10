@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,12 +16,35 @@ namespace StratasysDirectClientTests
 	[TestClass]
 	public class StratasysDirectClientTests
 	{
-		private const string _apiKey = ""; // SDM API Key goes here
+		private const string API_KEY_TEST = ""; // Rapidity API Key for the Test environment goes here
+		private const string BASE_URL_TEST = "https://test-api.stratasysdirect.com";
+		private const string API_KEY_PRODUCTION = ""; //  // Rapidity API Key for the Production environment goes here
+		private const string BASE_URL_PRODUCTION = "https://api.stratasysdirect.com";
+
+		private const string TEST_PART1 = "CAP.STL";
+		private const string TEST_PART2 = "PANEL.STL";
+
+		public string ApiKey = "";
+		public string BaseUrl = "";
+		public string AppDataPath { get; set; }
+		public string TestFilePath1 { get; set; }
+		public string TestFilePath2 { get; set; }
+
+		[TestInitialize]
+		public void TestInitialize ()
+		{
+			ApiKey = API_KEY_TEST;
+			BaseUrl = BASE_URL_TEST;
+
+			AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
+			TestFilePath1 = Path.Combine (AppDataPath, TEST_PART1);
+			TestFilePath2 = Path.Combine (AppDataPath, TEST_PART2);
+		}
 
 		[TestMethod]
 		public void GetMaterials ()
 		{
-			var client = new StratasysDirectClient (_apiKey);
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var getMaterialsResponse = client.GetMaterials ();
 			Print.JSON (() => getMaterialsResponse);
 		}
@@ -27,7 +52,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFile_Without_Content ()
 		{
-			var client = new StratasysDirectClient (_apiKey);
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var fileUploadResponse = client.UploadFiles (new string[] { });
 			Print.JSON (() => fileUploadResponse);
 		}
@@ -35,25 +60,25 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFile_Without_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (_apiKey);
-			var fileUploadResponse = client.UploadFiles (new[] { @"E:\Parts\CAP.STL" });
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var fileUploadResponse = client.UploadFiles (new[] { TestFilePath1 });
 			Print.JSON (() => fileUploadResponse);
 		}
 
 		[TestMethod]
 		public void UploadFiles_Without_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (_apiKey);
-			var fileUploadResponse = client.UploadFiles (new[] { @"E:\Parts\CAP.STL", @"E:\Parts\PANEL.STL" });
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var fileUploadResponse = client.UploadFiles (new[] { TestFilePath1, TestFilePath2 });
 			Print.JSON (() => fileUploadResponse);
 		}
 
 		[TestMethod]
 		public void UploadFile_With_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (_apiKey);
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var fileUploadResponse = client.UploadFiles (
-				new[] { @"E:\Parts\CAP.STL" },
+				new[] { TestFilePath1 },
 				new FileUploadRequest ()
 				{
 					contextId = Guid.NewGuid ().ToString (),
@@ -79,9 +104,9 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_With_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (_apiKey);
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var fileUploadResponse = client.UploadFiles (
-				new[] { @"E:\Parts\CAP.STL", @"E:\Parts\PANEL.STL" },
+				new[] { TestFilePath1, TestFilePath2 },
 				new FileUploadRequest ()
 				{
 					contextId = Guid.NewGuid ().ToString (),
@@ -103,7 +128,7 @@ namespace StratasysDirectClientTests
 						{
 							contentType = "Part",
 							fileId = Guid.NewGuid ().ToString (),
-							fileUnits = "Millimeters",
+							fileUnits = "Inches",
 							notes = "Optimize orientation for minimal supports.",
 							analyze = false,
 							repair = true,
@@ -114,6 +139,14 @@ namespace StratasysDirectClientTests
 					},
 				});
 			Print.JSON (() => fileUploadResponse);
+		}
+
+		internal static string GetAssemblyDirectory ()
+		{
+			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
+			UriBuilder uri = new UriBuilder (codeBase);
+			string path = Uri.UnescapeDataString (uri.Path);
+			return Path.GetDirectoryName (path);
 		}
 	}
 

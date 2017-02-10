@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Web.Script.Serialization;
 
 using StratasysDirect.Models;
@@ -15,27 +16,26 @@ namespace StratasysDirect
 	// TODO: gernerate api client proxy via https://github.com/Azure/autorest
 	public class StratasysDirectClient
 	{
-		private string uploadUri = "https://test.stratasysdirect.com:443/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
-		private string materialsUri = "https://test.stratasysdirect.com:443/Rapidity/api/public/v1/products/materials";
+		private string uploadUrl = "/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
+		private string materialsUrl = "/Rapidity/api/public/v1/products/express";
 
-		//private string uploadUri = "http://local.api.stratasysdirect.com/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
-		//private string materialsUri = "http://local.api.stratasysdirect.com/Rapidity/api/public/v1/products/materials";
-
-		public StratasysDirectClient (string apiKey)
+		public StratasysDirectClient (string baseUrl, string apiKey)
 		{
+			BaseUrl = baseUrl;
 			ApiKey = apiKey;
 		}
 
+		public string BaseUrl { get; set; }
 		public string ApiKey { get; set; }
 
 		public GetMaterialsResponse GetMaterials ()
 		{
 			using (var client = CreateHttpClient ())
 			{
-				var result = client.GetAsync (materialsUri).Result;
+				var result = client.GetAsync (FormatUrl (materialsUrl)).Result;
 
 				string response = result.Content.ReadAsStringAsync ().Result;
-				Trace.WriteLine (response);
+				//Trace.WriteLine (response);
 
 				var getMaterialsResponse = new JavaScriptSerializer ().Deserialize<GetMaterialsResponse> (response);
 				return getMaterialsResponse;
@@ -54,19 +54,19 @@ namespace StratasysDirect
 
 				using (var client = CreateHttpClient ())
 				{
-					var result = client.PostAsync (uploadUri, content).Result;
-					Trace.WriteLine (result);
+					var result = client.PostAsync (FormatUrl (uploadUrl), content).Result;
+					//Trace.WriteLine (result);
 
 					IEnumerable<string> values;
 					string location = string.Empty;
 					if (result.Headers.TryGetValues ("Location", out values))
 					{
 						location = values.FirstOrDefault ();
-						Trace.WriteLine (string.Format ("Location: {0}", location));
+						//Trace.WriteLine (string.Format ("Location: {0}", location));
 					}
 
 					string response = result.Content.ReadAsStringAsync ().Result;
-					Trace.WriteLine (response);
+					//Trace.WriteLine (response);
 
 					// TODO: add ability to easily determine success/failure without checking errors == null
 					var fileUploadResponse = new JavaScriptSerializer ().Deserialize<FileUploadResponse> (response);
@@ -127,12 +127,18 @@ namespace StratasysDirect
 				content.Add (new StringContent (value), string.Format ("\"{0}\"", name));
 			}
 		}
+
 		private void AddFormData (MultipartFormDataContent content, int index, string name, string value)
 		{
 			if (string.IsNullOrEmpty (value) == false)
 			{
 				content.Add (new StringContent (value), string.Format ("\"files[{0}][{1}]\"", index, name));
 			}
+		}
+
+		private string FormatUrl (string endpoint)
+		{
+			return string.Format ("{0}{1}", BaseUrl, endpoint);
 		}
 	}
 }
