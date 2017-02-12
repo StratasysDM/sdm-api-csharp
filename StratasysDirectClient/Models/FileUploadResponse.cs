@@ -10,5 +10,6 @@ namespace StratasysDirect.Models
 
 	public class FileUploadResponse : ApiResponse<FileUploadData>
 	{
+        public string location { get; set; }
 	}
 }

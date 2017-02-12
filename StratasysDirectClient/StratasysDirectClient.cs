@@ -35,7 +35,7 @@ namespace StratasysDirect
 				var result = client.GetAsync (FormatUrl (materialsUrl)).Result;
 
 				string response = result.Content.ReadAsStringAsync ().Result;
-				//Trace.WriteLine (response);
+				Trace.WriteLine (response);
 
 				var getMaterialsResponse = new JavaScriptSerializer ().Deserialize<GetMaterialsResponse> (response);
 				return getMaterialsResponse;
@@ -55,22 +55,22 @@ namespace StratasysDirect
 				using (var client = CreateHttpClient ())
 				{
 					var result = client.PostAsync (FormatUrl (uploadUrl), content).Result;
-					//Trace.WriteLine (result);
-
-					IEnumerable<string> values;
-					string location = string.Empty;
-					if (result.Headers.TryGetValues ("Location", out values))
-					{
-						location = values.FirstOrDefault ();
-						//Trace.WriteLine (string.Format ("Location: {0}", location));
-					}
+					Trace.WriteLine (result);
 
 					string response = result.Content.ReadAsStringAsync ().Result;
-					//Trace.WriteLine (response);
+					Trace.WriteLine (response);
 
 					// TODO: add ability to easily determine success/failure without checking errors == null
 					var fileUploadResponse = new JavaScriptSerializer ().Deserialize<FileUploadResponse> (response);
-					return fileUploadResponse;
+
+                    IEnumerable<string> values;
+                    if (result.Headers.TryGetValues("Location", out values))
+                    {
+                        fileUploadResponse.location = values.FirstOrDefault();
+                        //Trace.WriteLine (string.Format ("Location: {0}", location));
+                    }
+
+                    return fileUploadResponse;
 				}
 			}
 		}

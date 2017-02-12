@@ -33,10 +33,12 @@ namespace StratasysDirectClientTests
 		[TestInitialize]
 		public void TestInitialize ()
 		{
-			ApiKey = API_KEY_TEST;
-			BaseUrl = BASE_URL_TEST;
+            ApiKey = API_KEY_TEST;
+            BaseUrl = BASE_URL_TEST;
+            //ApiKey = API_KEY_PRODUCTION;
+            //BaseUrl = BASE_URL_PRODUCTION;
 
-			AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
+            AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
 			TestFilePath1 = Path.Combine (AppDataPath, TEST_PART1);
 			TestFilePath2 = Path.Combine (AppDataPath, TEST_PART2);
 		}
