@@ -51,9 +51,11 @@
 		public bool repair { get; set; }
 		/// <summary>Number of copies requested for the given Part or SecureFileUpload. (optional: default: 1 for Part and SecureFileUpload).</summary>
 		public int quantity { get; set; }
-		/// <summary>Simple material ID provided by the /products/materials API.</summary>
+		/// <summary>Material ID provided by the /products/express endpoint. Selects the default options for the given technology and material. </summary>
 		public string materialId { get; set; }
-		public string finishId { get; set; }
+        /// <summary>Finish ID provided by the /products/express endpoint. Selects a specific material and finishing option.</summary>
+        public string finishId { get; set; }
+        /// <summary>Not Implemented</summary>
 		public PartStyle partStyle { get; set; }
 	}
 }
