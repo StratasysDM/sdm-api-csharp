@@ -65,6 +65,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="App_Data\CAP.STL">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -16,7 +16,9 @@ namespace StratasysDirect
 	// TODO: gernerate api client proxy via https://github.com/Azure/autorest
 	public class StratasysDirectClient
 	{
-		private string uploadUrl = "/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
+        private readonly static TraceSource Log = new TraceSource ("StratasysDirect.StratasysDirectClient");
+
+        private string uploadUrl = "/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
 		private string materialsUrl = "/Rapidity/api/public/v1/products/express";
 
 		public StratasysDirectClient (string baseUrl, string apiKey)
@@ -33,11 +35,12 @@ namespace StratasysDirect
 			using (var client = CreateHttpClient ())
 			{
 				var result = client.GetAsync (FormatUrl (materialsUrl)).Result;
+                Log.TraceInformation (result.ToString ());
 
-				string response = result.Content.ReadAsStringAsync ().Result;
-				Trace.WriteLine (response);
+                string response = result.Content.ReadAsStringAsync ().Result;
+                //Log.TraceInformation (response);
 
-				var getMaterialsResponse = new JavaScriptSerializer ().Deserialize<GetMaterialsResponse> (response);
+                var getMaterialsResponse = new JavaScriptSerializer ().Deserialize<GetMaterialsResponse> (response);
 				return getMaterialsResponse;
 			}
 		}
@@ -55,10 +58,10 @@ namespace StratasysDirect
 				using (var client = CreateHttpClient ())
 				{
 					var result = client.PostAsync (FormatUrl (uploadUrl), content).Result;
-					Trace.WriteLine (result);
+					Log.TraceInformation (result.ToString ());
 
 					string response = result.Content.ReadAsStringAsync ().Result;
-					Trace.WriteLine (response);
+					//Log.TraceInformation (response);
 
 					// TODO: add ability to easily determine success/failure without checking errors == null
 					var fileUploadResponse = new JavaScriptSerializer ().Deserialize<FileUploadResponse> (response);
@@ -67,7 +70,6 @@ namespace StratasysDirect
                     if (result.Headers.TryGetValues("Location", out values))
                     {
                         fileUploadResponse.location = values.FirstOrDefault();
-                        //Trace.WriteLine (string.Format ("Location: {0}", location));
                     }
 
                     return fileUploadResponse;
