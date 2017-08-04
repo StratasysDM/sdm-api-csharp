@@ -69,6 +69,9 @@
     <None Include="App_Data\CAP.STL">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="App_Data\CHASSIS.SLDPRT">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="App_Data\PANEL.STL">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

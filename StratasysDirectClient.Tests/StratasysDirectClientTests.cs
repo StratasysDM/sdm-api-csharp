@@ -23,24 +23,27 @@ namespace StratasysDirectClientTests
 
 		private const string TEST_PART1 = "CAP.STL";
 		private const string TEST_PART2 = "PANEL.STL";
+		private const string TEST_PART3 = "CHASSIS.SLDPRT";
 
 		public string ApiKey = "";
 		public string BaseUrl = "";
 		public string AppDataPath { get; set; }
 		public string TestFilePath1 { get; set; }
 		public string TestFilePath2 { get; set; }
+		public string TestFilePath3 { get; set; }
 
 		[TestInitialize]
 		public void TestInitialize ()
 		{
-            ApiKey = API_KEY_TEST;
-            BaseUrl = BASE_URL_TEST;
-            //ApiKey = API_KEY_PRODUCTION;
-            //BaseUrl = BASE_URL_PRODUCTION;
+			ApiKey = API_KEY_TEST;
+			BaseUrl = BASE_URL_TEST;
+			//ApiKey = API_KEY_PRODUCTION;
+			//BaseUrl = BASE_URL_PRODUCTION;
 
-            AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
+			AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
 			TestFilePath1 = Path.Combine (AppDataPath, TEST_PART1);
 			TestFilePath2 = Path.Combine (AppDataPath, TEST_PART2);
+			TestFilePath3 = Path.Combine (AppDataPath, TEST_PART3);
 		}
 
 		[TestMethod]
@@ -79,11 +82,13 @@ namespace StratasysDirectClientTests
 		public void UploadFile_With_FileUploadProperties ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1 },
 				new FileUploadRequest ()
 				{
 					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
 					files = new List<FileUploadProperties> ()
 					{
 						new FileUploadProperties ()
@@ -95,8 +100,37 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							finishId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+		}
+
+		[TestMethod]
+		public void UploadFile_With_Native_CAD_File ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath3 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							notes = "With native CAD file",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
 						},
 					},
 				});
@@ -107,11 +141,13 @@ namespace StratasysDirectClientTests
 		public void UploadFiles_With_FileUploadProperties ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1, TestFilePath2 },
 				new FileUploadRequest ()
 				{
 					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
 					files = new List<FileUploadProperties> ()
 					{
 						new FileUploadProperties ()
@@ -123,8 +159,8 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							finishId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
 						},
 						new FileUploadProperties ()
 						{
@@ -132,15 +168,194 @@ namespace StratasysDirectClientTests
 							fileId = Guid.NewGuid ().ToString (),
 							fileUnits = "Inches",
 							notes = "Optimize orientation for minimal supports.",
-							analyze = false,
+							analyze = true,
 							repair = true,
 							quantity = 3,
-							materialId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							finishId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
+							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
 						}
 					},
 				});
 			Print.JSON (() => fileUploadResponse);
+		}
+
+		[TestMethod]
+		public void UploadFiles_With_DuplicateParts ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1, TestFilePath1 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "",
+							analyze = true,
+							repair = false,
+							quantity = 3,
+							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
+							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+						}
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+		}
+
+		[TestMethod]
+		public void UploadFiles_For_PolyJet_MultiColor ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1, TestFilePath2 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "Optimize orientation for shear force.",
+							quantity = 1,
+							materialTypeId = "901393d6-ed84-4031-8785-4239ab9fa281",
+							partStyleId = "045507ae-1149-47a6-9a02-7ad9e04f21c3",
+						},
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><note><to>John</to><from>Jane</from><heading>Notes</heading><body>Optimize for shear force</body></note>",
+							quantity = 5,
+							materialTypeId = "901393d6-ed84-4031-8785-4239ab9fa281",
+							partStyleId = "045507ae-1149-47a6-9a02-7ad9e04f21c3",
+						}
+					},
+				});
+
+			Print.JSON (() => fileUploadResponse);
+		}
+
+		[TestMethod]
+		public void GetPricingForClientSessionId ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "Optimize orientation for shear force.",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+
+			var getPricingListResponse = client.GetPricingForClientSessionId (clientSessionId);
+			Print.JSON (() => getPricingListResponse);
+		}
+
+		[TestMethod]
+		public void CreateRFQForUploads ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1, TestFilePath2, TestFilePath3 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "Optimize orientation for shear force.",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "",
+							analyze = true,
+							repair = false,
+							quantity = 3,
+							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
+							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+						},
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							notes = "With native CAD file",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+
+			var createPricingListForUploads = new CreatePricingListForUploads ();
+			fileUploadResponse.data.items.ForEach (upload =>
+			{
+				createPricingListForUploads.uploads.Add (new PricedUpload ()
+				{
+					uploadId = upload.uploadId,
+				});
+			});
+
+			var getPricingListResponse = client.GetPricingForUploads (clientSessionId, createPricingListForUploads);
+			Print.JSON (() => getPricingListResponse);
 		}
 
 		internal static string GetAssemblyDirectory ()

@@ -15,8 +15,8 @@
 			analyze = true;
 			repair = false;
 			quantity = 1;
-			materialId = string.Empty;
-			finishId = string.Empty;
+			materialTypeId = string.Empty;
+			partStyleId = string.Empty;
 			partStyle = new PartStyle ();
 		}
 
@@ -40,9 +40,19 @@
 		/// <summary>Client supplied filename. Overrides filename provided by form data or fileUrl. (optional)</summary>
 		public string filename { get; set; }
 		/// <summary>For Part file, this defines the file units. Required for unitless files (STL, OBJ, PLY, etc.) (required). Not required for native CAD files (STEP, IGES, CATIA, etc.) (optional)</summary>
+		/// <value>
+		/// Acceptable values are: 
+		/// - Inches
+		/// - Millimeters
+		/// </value>
 		public string fileUnits { get; set; }
-		/// <summary>Display units for quote and ordering. Part metrics will be converted to the specified display units for quotes and orders. (optional)</summary>
-		public string displayUnits { get; set; }
+        /// <summary>Display units for quote and ordering. Part metrics will be converted to the specified display units for quotes and orders. (optional)</summary>
+		/// <value>
+		/// Acceptable values are: 
+		/// - Inches
+		/// - Millimeters
+		/// </value>
+        public string displayUnits { get; set; }
 		/// <summary>Notes or special requiremnts for a Part or SecureFileUpload. Will be reviewed by a Project Engineer prior to quote and ordering. (optional)</summary>
 		public string notes { get; set; }
 		/// <summary>Analyze part geometry for quoting. (optional. default: true for Part otherwise false.)</summary>
@@ -51,10 +61,10 @@
 		public bool repair { get; set; }
 		/// <summary>Number of copies requested for the given Part or SecureFileUpload. (optional: default: 1 for Part and SecureFileUpload).</summary>
 		public int quantity { get; set; }
-		/// <summary>Material ID provided by the /products/express endpoint. Selects the default options for the given technology and material. </summary>
-		public string materialId { get; set; }
-        /// <summary>Finish ID provided by the /products/express endpoint. Selects a specific material and finishing option.</summary>
-        public string finishId { get; set; }
+		/// <summary>Material ID provided by the /products/simple endpoint. Selects the default options for the given technology and material. </summary>
+		public string materialTypeId { get; set; }
+        /// <summary>SimplePartStyle ID provided by the /products/simple endpoint. Selects a specific material and finishing option.</summary>
+        public string partStyleId { get; set; }
         /// <summary>Not Implemented</summary>
 		public PartStyle partStyle { get; set; }
 	}

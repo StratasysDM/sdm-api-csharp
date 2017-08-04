@@ -4,9 +4,11 @@ namespace StratasysDirect.Models
 {
 	public class Material
 	{
-		public string materialId { get; set; }
+		public string materialTypeId { get; set; }
 		public string materialName { get; set; }
 		public string technologyName { get; set; }
-		public List<Finish> finishes { get; set; }
+		public string productName { get; set; }
+		public string defaultPartStyleId { get; set; }
+		public List<SimplePartStyle> partStyles { get; set; }
 	}
 }
