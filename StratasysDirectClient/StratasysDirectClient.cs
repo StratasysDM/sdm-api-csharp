@@ -22,6 +22,7 @@ namespace StratasysDirect
 	{
 		private readonly static TraceSource Log = new TraceSource ("StratasysDirect.StratasysDirectClient");
 
+		private string acessToken = "/Rapidity/api/public/v1/oauth2/token";
 		private string uploadUrl = "/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
 		private string materialsUrl = "/Rapidity/api/public/v1/products/simple";
 		private string pricingCreateForClientSessionIdUrl = "/Rapidity/api/public/v1/pricing/commands/createForClientSessionId?clientSessionId=";
@@ -38,6 +39,35 @@ namespace StratasysDirect
 		public string BaseUrl { get; set; }
 		public string ApiKey { get; set; }
 
+		public CreateAccessTokenResponse CreateAccessToken (string username, string password)
+		{
+			using (var client = CreateHttpClient ())
+			{
+				var parameters = new Dictionary<string, string> ()
+				{
+					{"grant_type", "password"},
+					{"client_id", ApiKey},
+					{"username", username},
+					{"password", password},
+				};
+
+				using (var content = new FormUrlEncodedContent (parameters))
+				{ 
+					content.Headers.Clear ();
+					content.Headers.ContentType = new MediaTypeHeaderValue ("application/x-www-form-urlencoded");
+
+					var result = client.PostAsync (FormatUrl (acessToken), content).Result;
+					Log.TraceInformation (result.ToString ());
+
+					string response = result.Content.ReadAsStringAsync ().Result;
+					Log.TraceInformation (response);
+
+					var createAccessTokenResponse = new JavaScriptSerializer ().Deserialize<CreateAccessTokenResponse> (response);
+					return createAccessTokenResponse;
+				}
+			}
+		}
+
 		public GetMaterialsResponse GetMaterials ()
 		{
 			using (var client = CreateHttpClient ())
@@ -46,7 +76,7 @@ namespace StratasysDirect
 				Log.TraceInformation (result.ToString ());
 
 				string response = result.Content.ReadAsStringAsync ().Result;
-				//Log.TraceInformation (response);
+				Log.TraceInformation (response);
 
 				var getMaterialsResponse = new JavaScriptSerializer ().Deserialize<GetMaterialsResponse> (response);
 				return getMaterialsResponse;
@@ -69,7 +99,7 @@ namespace StratasysDirect
 					Log.TraceInformation (result.ToString ());
 
 					string response = result.Content.ReadAsStringAsync ().Result;
-					//Log.TraceInformation (response);
+					Log.TraceInformation (response);
 
 					// TODO: add ability to easily determine success/failure without checking errors == null
 					var fileUploadResponse = new JavaScriptSerializer ().Deserialize<FileUploadResponse> (response);

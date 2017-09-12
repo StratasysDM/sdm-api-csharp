@@ -16,12 +16,12 @@ namespace StratasysDirectClientTests
 	[TestClass]
 	public class StratasysDirectClientTests
 	{
-        private const string API_KEY_TEST = ""; // Rapidity API Key for the Test environment goes here
-        private const string BASE_URL_TEST = "https://test-api.stratasysdirect.com";
-        private const string API_KEY_PRODUCTION = ""; //  // Rapidity API Key for the Production environment goes here
-        private const string BASE_URL_PRODUCTION = "https://api.stratasysdirect.com";
+		private const string API_KEY_TEST = ""; // Rapidity API Key for the Test environment goes here
+		private const string BASE_URL_TEST = "https://test-api.stratasysdirect.com";
+		private const string API_KEY_PRODUCTION = ""; //  // Rapidity API Key for the Production environment goes here
+		private const string BASE_URL_PRODUCTION = "https://api.stratasysdirect.com";
 
-        private const string TEST_PART1 = "CAP.STL";
+		private const string TEST_PART1 = "CAP.STL";
 		private const string TEST_PART2 = "PANEL.STL";
 		private const string TEST_PART3 = "CHASSIS.SLDPRT";
 
@@ -50,6 +50,7 @@ namespace StratasysDirectClientTests
 		public void GetMaterials ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+
 			var getMaterialsResponse = client.GetMaterials ();
 			Print.JSON (() => getMaterialsResponse);
 		}
@@ -58,6 +59,7 @@ namespace StratasysDirectClientTests
 		public void UploadFile_Without_Content ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+
 			var fileUploadResponse = client.UploadFiles (new string[] { });
 			Print.JSON (() => fileUploadResponse);
 		}
@@ -66,6 +68,7 @@ namespace StratasysDirectClientTests
 		public void UploadFile_Without_FileUploadProperties ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+
 			var fileUploadResponse = client.UploadFiles (new[] { TestFilePath1 });
 			Print.JSON (() => fileUploadResponse);
 		}
@@ -74,6 +77,7 @@ namespace StratasysDirectClientTests
 		public void UploadFiles_Without_FileUploadProperties ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+
 			var fileUploadResponse = client.UploadFiles (new[] { TestFilePath1, TestFilePath2 });
 			Print.JSON (() => fileUploadResponse);
 		}
@@ -83,6 +87,7 @@ namespace StratasysDirectClientTests
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();
+
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1 },
 				new FileUploadRequest ()
@@ -113,6 +118,7 @@ namespace StratasysDirectClientTests
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();
+
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath3 },
 				new FileUploadRequest ()
@@ -138,10 +144,60 @@ namespace StratasysDirectClientTests
 		}
 
 		[TestMethod]
+		public void UploadFiles_With_User_Credentials ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+
+			var accessToken = client.CreateAccessToken ("test-api@stratasysdirect.com", "Password12");
+			Print.JSON (() => accessToken);
+
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1, TestFilePath2 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "Optimize orientation for shear force.",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "Optimize orientation for minimal supports.",
+							analyze = true,
+							repair = true,
+							quantity = 3,
+							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
+							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+						}
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+
+			string landingPageUrl = fileUploadResponse.location + "&access_token=" + accessToken.access_token;
+			Print.JSON (() => landingPageUrl);
+		}
+
+		[TestMethod]
 		public void UploadFiles_With_FileUploadProperties ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();
+
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1, TestFilePath2 },
 				new FileUploadRequest ()
@@ -184,6 +240,7 @@ namespace StratasysDirectClientTests
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();
+
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1, TestFilePath1 },
 				new FileUploadRequest ()
@@ -226,6 +283,7 @@ namespace StratasysDirectClientTests
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();
+
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1, TestFilePath2 },
 				new FileUploadRequest ()
@@ -261,10 +319,11 @@ namespace StratasysDirectClientTests
 		}
 
 		[TestMethod]
-		public void GetPricingForClientSessionId ()
+		public void GetPricing_For_ClientSessionId ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();
+
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1, TestFilePath2 },
 				new FileUploadRequest ()
@@ -305,18 +364,19 @@ namespace StratasysDirectClientTests
 			Print.JSON (() => getPricingListResponse);
 		}
 
-        [TestMethod]
-        public void GetPricingForUploads ()
-        {
-            var client = new StratasysDirectClient(BaseUrl, ApiKey);
-            var clientSessionId = Guid.NewGuid().ToString();
-            var fileUploadResponse = client.UploadFiles(
-                new[] { TestFilePath1, TestFilePath2 },
-                new FileUploadRequest()
-                {
-                    contextId = Guid.NewGuid().ToString(),
-                    clientSessionId = clientSessionId,
-                    files = new List<FileUploadProperties>()
+		[TestMethod]
+		public void GetPricing_For_Uploads ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1, TestFilePath2 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
                     {
                         new FileUploadProperties ()
                         {
@@ -341,11 +401,11 @@ namespace StratasysDirectClientTests
 							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
 						}
                     },
-                });
-            Print.JSON(() => fileUploadResponse);
+				});
+			Print.JSON (() => fileUploadResponse);
 
-            var createPricingListForUploads = new CreatePricingListForUploads();
-            createPricingListForUploads.uploads = new List<PricedUpload>()
+			var createPricingListForUploads = new CreatePricingListForUploads ();
+			createPricingListForUploads.uploads = new List<PricedUpload> ()
             {
                  new PricedUpload ()
                  {
@@ -361,23 +421,22 @@ namespace StratasysDirectClientTests
                  },
             };
 
-            var getPricingListResponse = client.GetPricingForUploads (clientSessionId, createPricingListForUploads);
+			var getPricingListResponse = client.GetPricingForUploads (clientSessionId, createPricingListForUploads);
+			Print.JSON (() => getPricingListResponse);
+		}
 
-            Print.JSON(() => getPricingListResponse);
-        }
-
-        [TestMethod]
-        public void GetPricingForUploads_With_Invalid_Part ()
-        {
-            var client = new StratasysDirectClient(BaseUrl, ApiKey);
-            var clientSessionId = Guid.NewGuid().ToString();
-            var fileUploadResponse = client.UploadFiles(
-                new[] { TestFilePath1 },
-                new FileUploadRequest()
-                {
-                    contextId = Guid.NewGuid().ToString(),
-                    clientSessionId = clientSessionId,
-                    files = new List<FileUploadProperties>()
+		[TestMethod]
+		public void GetPricing_For_Uploads_With_Invalid_Part ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
                     {
                         new FileUploadProperties ()
                         {
@@ -391,11 +450,11 @@ namespace StratasysDirectClientTests
 							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
                         },
                     },
-                });
-            Print.JSON(() => fileUploadResponse);
+				});
+			Print.JSON (() => fileUploadResponse);
 
-            var createPricingListForUploads = new CreatePricingListForUploads();
-            createPricingListForUploads.uploads = new List<PricedUpload>()
+			var createPricingListForUploads = new CreatePricingListForUploads ();
+			createPricingListForUploads.uploads = new List<PricedUpload> ()
             {
                  new PricedUpload ()
                  {
@@ -405,17 +464,16 @@ namespace StratasysDirectClientTests
                  },
             };
 
-            var getPricingListResponse = client.GetPricingForUploads (clientSessionId, createPricingListForUploads);
-
-            Print.JSON(() => getPricingListResponse);
+			var getPricingListResponse = client.GetPricingForUploads (clientSessionId, createPricingListForUploads);
+			Print.JSON (() => getPricingListResponse);
 
 			Assert.AreEqual (getPricingListResponse.data.items[0].fileUnits, "none");
 			Assert.AreEqual (getPricingListResponse.data.items[0].partStatus, "PartMetricsError");
 			Assert.AreEqual (getPricingListResponse.data.items[0].pricedList["Rapid"].Count, 0);
-        }
+		}
 
-        [TestMethod]
-		public void CreateRFQForUploads ()
+		[TestMethod]
+		public void CreateRFQ_For_Uploads ()
 		{
 			var client = new StratasysDirectClient (BaseUrl, ApiKey);
 			var clientSessionId = Guid.NewGuid ().ToString ();

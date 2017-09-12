@@ -49,6 +49,7 @@
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Models\ApiResponse.cs" />
+    <Compile Include="Models\CreateAccessTokenResponse.cs" />
     <Compile Include="Models\CreatePricingListForUploads.cs" />
     <Compile Include="Models\CreatePricingListForClientSessionId.cs" />
     <Compile Include="Models\CreateRFQForClientSessionId.cs" />
