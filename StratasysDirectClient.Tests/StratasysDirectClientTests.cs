@@ -537,6 +537,38 @@ namespace StratasysDirectClientTests
 			Print.JSON (() => getPricingListResponse);
 		}
 
+		[TestMethod]
+		public void UploadFiles_With_InputErrors ()
+		{
+			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var clientSessionId = "291\"8aabf-7fb9-49be-b4ad-92966df0126b\r\n"; // NOTE: invalid " and \r\n characters
+
+			var fileUploadResponse = client.UploadFiles (
+				new[] { TestFilePath1 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							filename = "te\"st", // NOTE: invalid " character
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							notes = "Optimize orientation for shear force.",
+							analyze = true,
+							repair = false,
+							quantity = 2,
+							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
+							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+						},
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+		}
+
 		internal static string GetAssemblyDirectory ()
 		{
 			string codeBase = Assembly.GetExecutingAssembly ().CodeBase;
