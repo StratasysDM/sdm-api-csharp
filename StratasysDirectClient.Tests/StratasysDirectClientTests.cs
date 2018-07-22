@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -16,17 +17,25 @@ namespace StratasysDirectClientTests
 	[TestClass]
 	public class StratasysDirectClientTests
 	{
-		private const string API_KEY_TEST = ""; // Rapidity API Key for the Test environment goes here
-		private const string BASE_URL_TEST = "https://test-api.stratasysdirect.com";
-		private const string API_KEY_PRODUCTION = ""; //  // Rapidity API Key for the Production environment goes here
-		private const string BASE_URL_PRODUCTION = "https://api.stratasysdirect.com";
+		private StratasysDirectClient.Config _testConfig = new StratasysDirectClient.Config
+		{
+			ApiKey= "", // Rapidity API Key for the Test environment goes here. Register at https://developers.stratasysdirect.com/
+			BaseUrl= "https://test-api.stratasysdirect.com",
+		};
+
+		private StratasysDirectClient.Config _productionConfig = new StratasysDirectClient.Config
+		{
+			ApiKey = "",  // Rapidity API Key for the Production environment goes here. Register at https://developers.stratasysdirect.com/
+			BaseUrl = "https://api.stratasysdirect.com",
+		};
 
 		private const string TEST_PART1 = "CAP.STL";
 		private const string TEST_PART2 = "PANEL.STL";
 		private const string TEST_PART3 = "CHASSIS.SLDPRT";
+		private const string TEST_PART_ZIPPED = "ZIPPED.ZIP";
 
-		public string ApiKey = "";
-		public string BaseUrl = "";
+		public bool EnableProduction = false;
+		public StratasysDirectClient.Config Config { get; set; }
 		public string AppDataPath { get; set; }
 		public string TestFilePath1 { get; set; }
 		public string TestFilePath2 { get; set; }
@@ -35,10 +44,7 @@ namespace StratasysDirectClientTests
 		[TestInitialize]
 		public void TestInitialize ()
 		{
-			ApiKey = API_KEY_TEST;
-			BaseUrl = BASE_URL_TEST;
-			//ApiKey = API_KEY_PRODUCTION;
-			//BaseUrl = BASE_URL_PRODUCTION;
+			Config = EnableProduction ? _productionConfig : _testConfig;
 
 			AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
 			TestFilePath1 = Path.Combine (AppDataPath, TEST_PART1);
@@ -49,7 +55,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void GetMaterials ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 
 			var getMaterialsResponse = client.GetMaterials ();
 			Print.JSON (() => getMaterialsResponse);
@@ -58,7 +64,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFile_Without_Content ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 
 			var fileUploadResponse = client.UploadFiles (new string[] { });
 			Print.JSON (() => fileUploadResponse);
@@ -67,7 +73,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFile_Without_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 
 			var fileUploadResponse = client.UploadFiles (new[] { TestFilePath1 });
 			Print.JSON (() => fileUploadResponse);
@@ -76,7 +82,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_Without_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 
 			var fileUploadResponse = client.UploadFiles (new[] { TestFilePath1, TestFilePath2 });
 			Print.JSON (() => fileUploadResponse);
@@ -85,7 +91,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFile_With_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var fileUploadResponse = client.UploadFiles (
@@ -100,13 +106,11 @@ namespace StratasysDirectClientTests
 						{
 							contentType = "Part",
 							fileId = Guid.NewGuid ().ToString (),
-							fileUnits = "Inches",
+                            fileUnits = "Millimeters",
 							notes = "Optimize orientation for \"shear force.\"",
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
 						},
 					},
 				});
@@ -116,7 +120,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFile_With_Native_CAD_File ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var fileUploadResponse = client.UploadFiles (
@@ -135,8 +139,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.HDSL_Somos_NeXt_White,
 						},
 					},
 				});
@@ -146,7 +149,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_With_User_Credentials ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var accessToken = client.CreateAccessToken ("test-api@stratasysdirect.com", "Password12");
@@ -169,8 +172,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.HDSL_Somos_NeXt_White,
 						},
 						new FileUploadProperties ()
 						{
@@ -181,8 +183,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = true,
 							quantity = 3,
-							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						}
 					},
 				});
@@ -195,7 +196,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_With_FileUploadProperties ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var fileUploadResponse = client.UploadFiles (
@@ -215,8 +216,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.HDSL_Somos_NeXt_White,
 						},
 						new FileUploadProperties ()
 						{
@@ -227,8 +227,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = true,
 							quantity = 3,
-							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						}
 					},
 				});
@@ -238,7 +237,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_With_DuplicateParts ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var fileUploadResponse = client.UploadFiles (
@@ -258,8 +257,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.HDSL_Somos_NeXt_White,
 						},
 						new FileUploadProperties ()
 						{
@@ -270,8 +268,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 3,
-							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						}
 					},
 				});
@@ -281,7 +278,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_For_PolyJet_MultiColor ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var fileUploadResponse = client.UploadFiles (
@@ -299,8 +296,7 @@ namespace StratasysDirectClientTests
 							fileUnits = "Inches",
 							notes = "Optimize orientation for shear force.",
 							quantity = 1,
-							materialTypeId = "901393d6-ed84-4031-8785-4239ab9fa281",
-							partStyleId = "045507ae-1149-47a6-9a02-7ad9e04f21c3",
+							//partStyleId = "", // Default to Partner or Customer settings
 						},
 						new FileUploadProperties ()
 						{
@@ -309,8 +305,7 @@ namespace StratasysDirectClientTests
 							fileUnits = "Inches",
 							notes = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><note><to>John</to><from>Jane</from><heading>Notes</heading><body>Optimize for shear force</body></note>",
 							quantity = 5,
-							materialTypeId = "901393d6-ed84-4031-8785-4239ab9fa281",
-							partStyleId = "045507ae-1149-47a6-9a02-7ad9e04f21c3",
+							//partStyleId = "", // Default to Partner or Customer settings
 						}
 					},
 				});
@@ -319,31 +314,66 @@ namespace StratasysDirectClientTests
 		}
 
 		[TestMethod]
-		public void GetPricing_For_ClientSessionId ()
+		public void UploadFile_With_Zipped_Attachment ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
+			AppDataPath = Path.Combine (GetAssemblyDirectory (), @"App_Data");
+			string zippedFilePath = Path.Combine (AppDataPath, TEST_PART_ZIPPED);
+
 			var fileUploadResponse = client.UploadFiles (
-				new[] { TestFilePath1, TestFilePath2 },
+				new[] { TestFilePath1, zippedFilePath },
 				new FileUploadRequest ()
 				{
 					contextId = Guid.NewGuid ().ToString (),
 					clientSessionId = clientSessionId,
 					files = new List<FileUploadProperties> ()
 					{
-                        new FileUploadProperties ()
-                        {
-                            contentType = "Part",
-                            fileId = Guid.NewGuid ().ToString (),
-                            fileUnits = "Inches",
-                            notes = "Optimize orientation for shear force.",
-                            analyze = true,
-                            repair = false,
-                            quantity = 2,
-							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
-                        },
+						new FileUploadProperties ()
+						{
+							contentType = "Part",
+							fileId = Guid.NewGuid ().ToString (),
+							fileUnits = "Inches",
+							quantity = 1,
+						},
+						new FileUploadProperties ()
+						{
+							contentType = "Attachment",
+							fileId = Guid.NewGuid ().ToString (),
+							analyze = false,
+						},
+					},
+				});
+			Print.JSON (() => fileUploadResponse);
+		}
+
+		[TestMethod]
+		public void GetPricing_For_ClientSessionId ()
+		{
+			var client = new StratasysDirectClient (Config);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+
+			var fileUploadResponse = client.UploadFiles (
+				//new[] { TestFilePath1, TestFilePath2 },
+				new[] { TestFilePath2 },
+				new FileUploadRequest ()
+				{
+					contextId = Guid.NewGuid ().ToString (),
+					clientSessionId = clientSessionId,
+					files = new List<FileUploadProperties> ()
+					{
+						//new FileUploadProperties ()
+						//{
+						//	contentType = "Part",
+						//	fileId = Guid.NewGuid ().ToString (),
+						//	fileUnits = "Inches",
+						//	notes = "Optimize orientation for shear force.",
+						//	analyze = true,
+						//	repair = false,
+						//	quantity = 2,
+						//	partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
+						//},
 						new FileUploadProperties ()
 						{
 							contentType = "Part",
@@ -353,21 +383,25 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = true,
 							quantity = 3,
-							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						}
                     },
 				});
 			Print.JSON (() => fileUploadResponse);
 
-			var getPricingListResponse = client.GetPricingForClientSessionId (clientSessionId);
+			var getPricingListResponse = client.GetPricingForClientSessionId (
+				clientSessionId, 
+				new List<string>
+				{
+					PartStyles.PolyJet_VeroBlue_Blue
+				});
 			Print.JSON (() => getPricingListResponse);
 		}
 
 		[TestMethod]
 		public void GetPricing_For_Uploads ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 
 			var fileUploadResponse = client.UploadFiles (
@@ -382,12 +416,12 @@ namespace StratasysDirectClientTests
                         {
                             contentType = "Part",
                             fileId = Guid.NewGuid ().ToString (),
-                            fileUnits = "Inches",
+                            fileUnits = "Millimeters",
                             notes = "Optimize orientation for shear force.",
                             analyze = true,
                             repair = false,
                             quantity = 2,
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
                         },
 						new FileUploadProperties ()
 						{
@@ -398,7 +432,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = true,
 							quantity = 3,
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						}
                     },
 				});
@@ -409,16 +443,16 @@ namespace StratasysDirectClientTests
             {
                  new PricedUpload ()
                  {
-                   uploadId = fileUploadResponse.data.items[0].uploadId,
-                   quantity = 2,
-                   partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e"
+					uploadId = fileUploadResponse.data.items[0].uploadId,
+					quantity = 2,
+					partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
                  },
                  new PricedUpload ()
                  {
-                   uploadId = fileUploadResponse.data.items[1].uploadId,
-                   quantity = 3,
-                   partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
-                 },
+					uploadId = fileUploadResponse.data.items[1].uploadId,
+					quantity = 3,
+					partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
+               },
             };
 
 			var getPricingListResponse = client.GetPricingForUploads (clientSessionId, createPricingListForUploads);
@@ -428,7 +462,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void GetPricing_For_Uploads_With_Invalid_Part ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1 },
@@ -447,7 +481,7 @@ namespace StratasysDirectClientTests
                             analyze = true,
                             repair = false,
                             quantity = 2,
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
                         },
                     },
 				});
@@ -458,9 +492,9 @@ namespace StratasysDirectClientTests
             {
                  new PricedUpload ()
                  {
-                   uploadId = fileUploadResponse.data.items[0].uploadId,
-                   quantity = 2,
-                   partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e"
+					uploadId = fileUploadResponse.data.items[0].uploadId,
+					quantity = 2,
+					partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
                  },
             };
 
@@ -475,7 +509,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void CreateRFQ_For_Uploads ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = Guid.NewGuid ().ToString ();
 			var fileUploadResponse = client.UploadFiles (
 				new[] { TestFilePath1, TestFilePath2, TestFilePath3 },
@@ -494,8 +528,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						},
 						new FileUploadProperties ()
 						{
@@ -506,8 +539,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 3,
-							materialTypeId = "18e1b04b-49da-4300-b93f-fadd812d38a9",
-							partStyleId = "1a5f7a14-a08d-4641-a6a6-641fe129fb9e",
+							partStyleId = PartStyles.FDM_XD10_ABS_M30_Natural,
 						},
 						new FileUploadProperties ()
 						{
@@ -517,8 +549,7 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.HDSL_Somos_NeXt_White,
 						},
 					},
 				});
@@ -540,7 +571,7 @@ namespace StratasysDirectClientTests
 		[TestMethod]
 		public void UploadFiles_With_InputErrors ()
 		{
-			var client = new StratasysDirectClient (BaseUrl, ApiKey);
+			var client = new StratasysDirectClient (Config);
 			var clientSessionId = "291\"8aabf-7fb9-49be-b4ad-92966df0126b\r\n"; // NOTE: invalid " and \r\n characters
 
 			var fileUploadResponse = client.UploadFiles (
@@ -561,12 +592,45 @@ namespace StratasysDirectClientTests
 							analyze = true,
 							repair = false,
 							quantity = 2,
-							materialTypeId = "d2b39205-332e-46ae-bc67-eae7ccc54b89",
-							partStyleId = "8a314c28-2d7e-4ecd-9114-2125b6d28709",
+							partStyleId = PartStyles.HDSL_Somos_NeXt_White,
 						},
 					},
 				});
 			Print.JSON (() => fileUploadResponse);
+		}
+
+		[TestMethod]
+		public void UploadFiles_Test ()
+		{
+			var client = new StratasysDirectClient (Config);
+			var clientSessionId = Guid.NewGuid ().ToString ();
+
+			var accessToken = client.CreateAccessToken ("test-api@stratasysdirect.com", "Password12");
+			Print.JSON (() => accessToken);
+
+			FileUploadResponse fileUploadResponse = new FileUploadResponse ();
+			var filenames = new[] { TestFilePath1, TestFilePath2, TestFilePath3 };
+            foreach (string filename in filenames)
+            {
+	            fileUploadResponse = client.UploadFiles (
+		            new[] { filename },
+		            new FileUploadRequest ()
+					{
+						clientSessionId = clientSessionId,
+						files = new List<FileUploadProperties> ()
+						{
+							new FileUploadProperties ()
+							{
+								contentType = "Part", // Part, Attachment
+								analyze = false,
+							},
+						},
+					});
+                Print.JSON(() => fileUploadResponse);
+            }
+
+			string landingPageUrl = fileUploadResponse.location + "&access_token=" + accessToken.access_token;
+			Print.JSON (() => landingPageUrl);
 		}
 
 		internal static string GetAssemblyDirectory ()

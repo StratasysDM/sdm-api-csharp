@@ -22,13 +22,28 @@ namespace StratasysDirect
 	{
 		private readonly static TraceSource Log = new TraceSource ("StratasysDirect.StratasysDirectClient");
 
-		private string acessToken = "/Rapidity/api/public/v1/oauth2/token";
-		private string uploadUrl = "/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
-		private string materialsUrl = "/Rapidity/api/public/v1/products/simple";
-		private string pricingCreateForClientSessionIdUrl = "/Rapidity/api/public/v1/pricing/commands/createForClientSessionId?clientSessionId=";
-		private string pricingCreateForUploadsUrl = "/Rapidity/api/public/v1/pricing/commands/createForUploads?clientSessionId=";
-		private string rfqCreateForClientSessionIdUrl = "/Rapidity/api/public/v1/rfq/commands/createForClientSessionId?clientSessionId=";
-		private string rfqCreateForUploadsUrl = "/Rapidity/api/public/v1/rfq/commands/createForUploads?clientSessionId=";
+		public static class Urls
+		{ 
+			public static string acessToken = "/Rapidity/api/public/v1/oauth2/token";
+			public static string upload = "/Rapidity/api/public/v1/upload/files?uploadType=Multipart";
+			public static string materials = "/Rapidity/api/public/v1/products/simple";
+			public static string pricingCreateForClientSessionId = "/Rapidity/api/public/v1/pricing/commands/createForClientSessionId?clientSessionId=";
+			public static string pricingCreateForUploads = "/Rapidity/api/public/v1/pricing/commands/createForUploads?clientSessionId=";
+			public static string rfqCreateForClientSessionId = "/Rapidity/api/public/v1/rfq/commands/createForClientSessionId?clientSessionId=";
+			public static string rfqCreateForUploads = "/Rapidity/api/public/v1/rfq/commands/createForUploads?clientSessionId=";
+		}
+
+		public class Config 
+		{
+			public string ApiKey { get; set; }
+			public string BaseUrl { get; set; }
+		}
+
+		public StratasysDirectClient (Config config)
+		{
+			BaseUrl = config.BaseUrl;
+			ApiKey = config.ApiKey;
+		}
 
 		public StratasysDirectClient (string baseUrl, string apiKey)
 		{
@@ -56,7 +71,7 @@ namespace StratasysDirect
 					content.Headers.Clear ();
 					content.Headers.ContentType = new MediaTypeHeaderValue ("application/x-www-form-urlencoded");
 
-					var result = client.PostAsync (FormatUrl (acessToken), content).Result;
+					var result = client.PostAsync (FormatUrl (Urls.acessToken), content).Result;
 					Log.TraceInformation (result.ToString ());
 
 					string response = result.Content.ReadAsStringAsync ().Result;
@@ -72,7 +87,7 @@ namespace StratasysDirect
 		{
 			using (var client = CreateHttpClient ())
 			{
-				var result = client.GetAsync (FormatUrl (materialsUrl)).Result;
+				var result = client.GetAsync (FormatUrl (Urls.materials)).Result;
 				Log.TraceInformation (result.ToString ());
 
 				string response = result.Content.ReadAsStringAsync ().Result;
@@ -90,12 +105,11 @@ namespace StratasysDirect
 			using (var content = new MultipartFormDataContent ("Upload----" + DateTime.Now.ToString (CultureInfo.InvariantCulture)))
 			{
 				AddFiles (filenames, content);
-
 				AddFormData (fileUploadRequest, content);
 
 				using (var client = CreateHttpClient ())
 				{
-					var result = client.PostAsync (FormatUrl (uploadUrl), content).Result;
+					var result = client.PostAsync (FormatUrl (Urls.upload), content).Result;
 					Log.TraceInformation (result.ToString ());
 
 					string response = result.Content.ReadAsStringAsync ().Result;
@@ -118,6 +132,7 @@ namespace StratasysDirect
 		private HttpClient CreateHttpClient ()
 		{
 			var client = new HttpClient ();
+			client.Timeout = TimeSpan.FromMinutes (60);
 			client.DefaultRequestHeaders.Add ("X-SDM-ApiKey", ApiKey);
 			client.DefaultRequestHeaders.Accept.Clear ();
 			client.DefaultRequestHeaders.Accept.Add (new MediaTypeWithQualityHeaderValue ("application/json"));
@@ -162,17 +177,17 @@ namespace StratasysDirect
 			}
 		}
 
-		public PricedPartListResponse GetPricingForClientSessionId (string clientSessionId)
+		public PricedPartListResponse GetPricingForClientSessionId (string clientSessionId, List<string> partStylesIds = null)
 		{
 			var createPricingListForClientSessionId = new CreatePricingListForClientSessionId ()
 			{
 				clientSessionId = clientSessionId,
-				partStylesIds = null, // Pass null to get pricing for all simple products
+				partStylesIds = partStylesIds, // Pass null to get pricing for all simple products
 			};
 
 			using (var client = CreateHttpClient ())
 			{
-				var result = client.PostAsync (FormatUrl (pricingCreateForClientSessionIdUrl) + clientSessionId, new JsonContent (createPricingListForClientSessionId)).Result;
+				var result = client.PostAsync (FormatUrl (Urls.pricingCreateForClientSessionId) + clientSessionId, new JsonContent (createPricingListForClientSessionId)).Result;
 				Log.TraceInformation (result.ToString ());
 
 				string response = result.Content.ReadAsStringAsync ().Result;
@@ -187,7 +202,7 @@ namespace StratasysDirect
 		{
 			using (var client = CreateHttpClient ())
 			{
-				var result = client.PostAsync (FormatUrl (pricingCreateForUploadsUrl) + clientSessionId, new JsonContent (createPricingListForUploads)).Result;
+				var result = client.PostAsync (FormatUrl (Urls.pricingCreateForUploads) + clientSessionId, new JsonContent (createPricingListForUploads)).Result;
 				Log.TraceInformation (result.ToString ());
 
 				string response = result.Content.ReadAsStringAsync ().Result;

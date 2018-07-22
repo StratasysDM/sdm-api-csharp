@@ -16,6 +16,11 @@ namespace StratasysDirect.Models
 
 	public class CreatePricingListForUploads
 	{
+		public CreatePricingListForUploads ()
+		{
+			uploads = new List<PricedUpload> ();
+		}
+
 		public List<PricedUpload> uploads;
 	}
 }
