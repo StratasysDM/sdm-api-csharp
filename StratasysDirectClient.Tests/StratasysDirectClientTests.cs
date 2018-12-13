@@ -19,13 +19,13 @@ namespace StratasysDirectClientTests
 	{
 		private StratasysDirectClient.Config _testConfig = new StratasysDirectClient.Config
 		{
-			ApiKey= "40c7086936345ef1ac786a82b99c4ab7", // Rapidity API Key for the Test environment goes here. Register at https://developers.stratasysdirect.com/
+			ApiKey= "", // Rapidity API Key for the Test environment goes here. Register at https://developers.stratasysdirect.com/
 			BaseUrl= "https://test-api.stratasysdirect.com",
 		};
 
 		private StratasysDirectClient.Config _productionConfig = new StratasysDirectClient.Config
 		{
-			ApiKey = "ac387c6b10b220f75862061da82e9dcc",  // Rapidity API Key for the Production environment goes here. Register at https://developers.stratasysdirect.com/
+			ApiKey = "",  // Rapidity API Key for the Production environment goes here. Register at https://developers.stratasysdirect.com/
 			BaseUrl = "https://api.stratasysdirect.com",
 		};
 
