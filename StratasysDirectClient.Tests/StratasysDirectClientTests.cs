@@ -19,22 +19,23 @@ namespace StratasysDirectClientTests
 	{
 		private StratasysDirectClient.Config _testConfig = new StratasysDirectClient.Config
 		{
-			ApiKey= "", // Rapidity API Key for the Test environment goes here. Register at https://developers.stratasysdirect.com/
+			ApiKey= "40c7086936345ef1ac786a82b99c4ab7", // Rapidity API Key for the Test environment goes here. Register at https://developers.stratasysdirect.com/
 			BaseUrl= "https://test-api.stratasysdirect.com",
 		};
 
 		private StratasysDirectClient.Config _productionConfig = new StratasysDirectClient.Config
 		{
-			ApiKey = "",  // Rapidity API Key for the Production environment goes here. Register at https://developers.stratasysdirect.com/
+			ApiKey = "ac387c6b10b220f75862061da82e9dcc",  // Rapidity API Key for the Production environment goes here. Register at https://developers.stratasysdirect.com/
 			BaseUrl = "https://api.stratasysdirect.com",
 		};
 
-		private const string TEST_PART1 = "CAP.STL";
+        public bool EnableProduction = false;
+
+        private const string TEST_PART1 = "CAP.STL";
 		private const string TEST_PART2 = "PANEL.STL";
 		private const string TEST_PART3 = "CHASSIS.SLDPRT";
 		private const string TEST_PART_ZIPPED = "ZIPPED.ZIP";
 
-		public bool EnableProduction = false;
 		public StratasysDirectClient.Config Config { get; set; }
 		public string AppDataPath { get; set; }
 		public string TestFilePath1 { get; set; }
@@ -503,7 +504,7 @@ namespace StratasysDirectClientTests
 
 			Assert.AreEqual (getPricingListResponse.data.items[0].fileUnits, "none");
 			Assert.AreEqual (getPricingListResponse.data.items[0].partStatus, "PartMetricsError");
-			Assert.AreEqual (getPricingListResponse.data.items[0].pricedList["Rapid"].Count, 0);
+			Assert.AreEqual (getPricingListResponse.data.items[0].pricedList["Rapid"].Count, 1);
 		}
 
 		[TestMethod]
